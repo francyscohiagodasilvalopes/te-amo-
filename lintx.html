@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Convite de Aniversário</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --pink: #ff6fa3;
+      --pink-dark: #ff4f8d;
+      --card: #ffffff;
+      --ink: #4b2b5c;
+      --muted: #8a6fa0;
+      --bg-left: #dff6ff;
+      --bg-right: #f8d7f0;
+      --shadow: 0 10px 35px rgba(0,0,0,.12);
+      --radius: 18px;
+    }
+
+    html, body {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      color: var(--ink);
+      background: linear-gradient(120deg, var(--bg-left), var(--bg-right));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      overflow: hidden;
+      height: 100vh;
+      height: 100dvh;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+    }
+
+    .book {
+      position: relative;
+      width: min(780px, calc(100vw - 16px));
+      /* Altura fixa para garantir que o slider absoluto apareça em todos os navegadores */
+      height: calc(100vh - 16px);
+      height: calc(100dvh - 16px);
+      background: #fff0f7;
+      border-radius: calc(var(--radius) + 4px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 4px solid #fff;
+    }
+
+    /* Ribbon */
+    .ribbon {
+      position: absolute;
+      top: 20px;
+      right: -32px;
+      background: linear-gradient(90deg, #ffd76f, #ffb347);
+      color: #7a4800;
+      font-weight: 700;
+      padding: 6px 42px;
+      transform: rotate(35deg);
+      border-radius: 6px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.15);
+      user-select: none;
+      font-size: 13px;
+      letter-spacing: .2px;
+      z-index: 10;
+    }
+
+    /* Hearts patterned page */
+    .page-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 14px 14px, rgba(255,105,180,.16) 0 7px, transparent 7.5px) 0 0/64px 64px,
+        radial-gradient(circle at 46px 46px, rgba(255,105,180,.12) 0 6px, transparent 6.5px) 0 0/64px 64px,
+        linear-gradient(#fff8fc, #fff5fb);
+      opacity: .9;
+    }
+
+    /* Cover (lock) */
+    .cover {
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: 16px 22px 24px;
+      gap: 12px;
+      text-align: center;
+      z-index: 2;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .bear {
+      font-size: 84px;
+      margin-top: 12px;
+    }
+    h1.title {
+      margin: 0;
+      font-size: clamp(26px, 5vw, 40px);
+      color: #fff;
+      text-shadow: 0 3px 0 rgba(255,83,141,.35);
+      letter-spacing: .5px;
+    }
+    .cover-card {
+      width: min(480px, 90vw);
+      background: var(--pink);
+      border-radius: var(--radius);
+      padding: 24px 18px 20px;
+      box-shadow: var(--shadow);
+      color: #fff;
+    }
+    .lock {
+      font-size: 46px;
+      margin: 6px 0 12px;
+    }
+    .field {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    input[type="password"]{
+      width: 180px;
+      max-width: 180px;
+      height: 40px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      text-align: center;
+      background: #ffe1ee;
+      color: #7a3d6d;
+    }
+    button.primary {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 14px;
+      background: #fff;
+      color: var(--pink-dark);
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(255,255,255,.4) inset;
+    }
+    .hint { color: #ffeaa6; font-size: 13px; margin-top: 8px; min-height: 18px; }
+    .hint.error { color: #ffec6f; text-shadow: 0 1px 0 rgba(0,0,0,.15); }
+
+    /* Slider */
+    .slider {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      z-index: 3;
+    }
+    .slider.visible { display: flex; }
+    .slider header {
+      padding: 22px 24px 6px;
+      text-align: center;
+      font-weight: 800;
+      color: #7a4bb2;
+      font-size: 22px;
+    }
+    .slides {
+      position: relative;
+      flex: 1;
+      display: grid;
+      place-items: center;
+      padding: 12px 22px 22px;
+      gap: 12px;
+    }
+    /* Leve ajuste para a esquerda para melhor centralização visual em telas pequenas */
+    .slider header, .slides, .pager { transform: translateX(-6px); }
+    .card {
+      width: min(560px, 88vw);
+      min-height: 340px;
+      max-height: calc(100vh - 120px);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px 22px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--pink) transparent;
+    }
+    
+    .card::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .card::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .card::-webkit-scrollbar-thumb {
+      background: var(--pink);
+      border-radius: 3px;
+    }
+    
+    .card::-webkit-scrollbar-thumb:hover {
+      background: var(--pink-dark);
+    }
+    .nav {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 60px 1fr 60px;
+      align-items: center;
+      pointer-events: none;
+    }
+    .arrow {
+      pointer-events: auto;
+      display: grid;
+      place-items: center;
+      width: 44px; height: 44px;
+      margin: 0 8px;
+      border-radius: 50%;
+      background: #ffffffb0;
+      box-shadow: var(--shadow);
+      color: var(--pink-dark);
+      font-size: 22px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform .12s ease;
+    }
+    .arrow:active { transform: scale(.97); }
+    .pager { text-align: center; color: var(--muted); font-weight: 700; margin: 8px 0 16px; }
+
+    /* Slide types */
+    .slide-title { text-align: center; font-weight: 900; color: #7a4bb2; font-size: 26px; margin-bottom: 8px; }
+    .poem { line-height: 1.9; text-align: center; font-weight: 600; color: #62487e; }
+
+    .photo-box {
+      display: grid;
+      place-items: center;
+      min-height: 280px; /* altura mínima para telas pequenas */
+      height: auto;      /* cresce conforme a foto */
+      padding: 12px;
+      border-radius: 16px;
+      background: #f6f1f8;
+      border: 2px dashed #e3c6ea;
+      overflow: visible; /* não corta a imagem */
+    }
+    .photo-box img {
+      width: 100%;
+      height: auto;       /* acompanha até embaixo sem cortar */
+      object-fit: contain;
+      object-position: center;
+      border-radius: 12px;
+      opacity: .98;
+      display: block;
+    }
+    .secondary { 
+      padding: 8px 12px; border: none; border-radius: 12px; 
+      background: #f2e9f7; color: #7a4bb2; font-weight: 700; cursor: pointer;
+      box-shadow: 0 2px 0 rgba(255,255,255,.5) inset; margin-top: 10px;
+    }
+    .caption { text-align: center; margin-top: 10px; color: #8a6fa0; font-weight: 600; }
+
+    /* Responsive tweaks */
+    @media (max-width: 540px) {
+      body { padding: 4px; }
+      .book { border: 2px solid #fff; }
+      .cover { padding: 12px 16px 16px; gap: 8px; }
+      .cover-card { padding: 16px 12px 14px; }
+      .bear { font-size: 54px; margin-top: 4px; }
+      h1.title { font-size: 22px; }
+      .lock { font-size: 32px; margin: 2px 0 6px; }
+      .hint { font-size: 12px; margin-top: 6px; }
+      .nav { grid-template-columns: 52px 1fr 52px; }
+      .card { padding: 20px 14px; max-height: calc(85dvh - 40px); min-height: 300px; }
+      .field { flex-direction: column; align-items: center; gap: 8px; }
+      input[type="password"] { width: 200px; max-width: 200px; font-size: 14px; }
+      button.primary { width: 200px; font-size: 14px; padding: 8px 10px; }
+      .poem { font-size: 15px; }
+      .pager { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="book" role="application" aria-label="Nossa História de Amor">
+    <div class="page-bg" aria-hidden="true"></div>
+    <div class="ribbon">Juntos para sempre</div>
+
+    <!-- Cover (Lock) -->
+    <section class="cover" id="cover">
+      <div class="cover-card">
+        <div class="bear">🐻‍❄️</div>
+        <h1 class="title">Convite de Aniversário</h1>
+        <div class="lock" aria-hidden="true">🔒</div>
+        <div class="field" role="group" aria-label="Digite a chave para abrir o coração">
+          <input id="pwd" type="password" placeholder="Nossa chave" autocomplete="one-time-code" />
+          <button class="primary" id="open">Abrir Coração</button>
+        </div>
+        <div class="hint" id="hint">Dica: Um nome que eu te chamaria</div>
+      </div>
+    </section>
+
+    <!-- Slider Pages -->
+    <section class="slider" id="slider" aria-live="polite">
+      <header>Nossas Páginas</header>
+      <div class="slides">
+        <div class="card" data-slide="0">
+          <div class="slide-title">Convite de Aniversário ❤️</div>
+          <div class="poem">
+            Meu aniversário está chegando, e este convite é para uma pessoa que eu amo muito... você! 💌<br/>
+            Só você recebeu um convite como esse — o primeiro de muitos, viu? 😏
+            Eu fico muito feliz quando você vem me abraçar… é um dos melhores momentos (mesmo quando você vai embora e não dá tchau, eu fico com raiva kkk 🤭).<br/>
+            Quero que saiba o quanto vai ser importante pra mim ter você comigo nesse dia tão especial.
+            Quero celebrar, sorrir e aproveitar cada segundo ao seu lado, porque você faz parte da minha vida de um jeito único.💖<br/>
+            Espero te ver lá, com aquele seu sorriso lindo, deixando meu dia ainda mais inesquecível.
+            Prometo te amar mais a cada dia que passar — e cuidar de você do meu jeitinho (às vezes bagunçado, mas cheio de amor 🥰).<br/>
+            Ah… e pra ser sincero, acho que era pra ser só um convite simples,<br/>
+            emas acabei me empolgando um pouquinho kkk 😅❤️.
+          </div>
+        </div>
+
+        <div class="card" data-slide="1" hidden>
+          <div class="slide-title">Carta para você ✨</div>
+          <div class="poem">
+            Eu amo o jeito que você me olha, o jeito que se preocupa comigo 🤔, o jeito que me faz sentir que finalmente encontrei a pessoa certa.<br/>
+            Obrigado por cada sorriso, cada abraço, e por estar comigo nos dias bons e também nos ruins.<br/>
+            Não é sobre perfeição, é sobre conexão. E a nossa é daquelas que a gente sente que veio pra durar. Tem nem como falar que a gente<br>
+            não tem conexão — tudo a gente sabe fazer juntos kkk.Bolo, só eu que faço melhor 😆, mas o seu carinho é o melhor ingrediente de todos.<br/>
+            Somos vídeo maker, fotógrafos e muito mais… e quando penso nisso, só consigo imaginar o quanto ainda vamos construir lado a lado.<br>
+            Vamos ser um casal perfeito, não porque tudo é fácil, mas porque a gente combina até nas pequenas loucuras da vida 💞<br>
+            Lá em Anajatuba, você disse que se a gente morasse junto, não ia passar fome — e não só de comida kkk Fiquei pensando: como ela sabe que a gente vai morar junto? 😳<br>
+            Só que eu não falei nada, fiquei quieto, mas no fundo fiquei feliz… porque no fundo, eu também sinto que é pra ser. Deveria ter falado, né? Eita glória ☺️😘✨<br>
+            Esse é o primeiro de muitos momentos lindos que ainda virão. Te amo, Bianca 💗 Quando você abrir o outro, espero que aceite 😘(Era pra eu te mandar nesse domingo, mas eu criei tudo do zero, com programação.Deu trabalho, mas valeu a pena — porque foi feito com amor por você 💞)<br>
+            Beijossss 😘<br>
+            Ah, e fiquei sabendo que vou ganhar um beijo seu de presente… então já tô aqui ansioso esperando, viu? kkk 😘<br>
+            Agora eu sei o quanto uma foto faz falta nesses momentos… Ainda bem que eu tinha essas nossas, pra lembrar o quanto somos incríveis juntos. kkk 📸❤️
+          </div>
+        </div>
+
+        <div class="card" data-slide="2" hidden>
+          <div class="slide-title">Nossas Fotos</div>
+          <div class="photo-box">
+            <img id="photo" alt="Nossa foto" />
+          </div>
+          <div class="caption">1/3</div>
+        </div>
+
+        <div class="nav">
+          <div class="arrow" id="prev" aria-label="Anterior">❮</div>
+          <div></div>
+          <div class="arrow" id="next" aria-label="Próxima">❯</div>
+        </div>
+      </div>
+      <div class="pager" id="pager">Página 1 de 3</div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      const PASSWORD = "amor"; // altere se quiser
+      const cover = document.getElementById('cover');
+      const slider = document.getElementById('slider');
+      const pwd = document.getElementById('pwd');
+      const hint = document.getElementById('hint');
+      const openBtn = document.getElementById('open');
+      const slides = Array.from(document.querySelectorAll('[data-slide]'));
+      const pager = document.getElementById('pager');
+      const prev = document.getElementById('prev');
+      const next = document.getElementById('next');
+      const photoImg = document.getElementById('photo');
+      let index = 0;
+      let lastChangeTime = 0;
+
+      function setIndex(newIndex, force = false) {
+        // Proteção contra mudanças muito rápidas (exceto quando forçada)
+        const now = Date.now();
+        if (!force && now - lastChangeTime < 500) {
+          return;
+        }
+        lastChangeTime = now;
+        
+        index = (newIndex + slides.length) % slides.length;
+        slides.forEach((el, i) => {
+          if (i === index) {
+            el.hidden = false;
+            // Resetar scroll para o topo quando mostrar a página
+            el.scrollTop = 0;
+          } else {
+            el.hidden = true;
+          }
+        });
+        pager.textContent = `Página ${index + 1} de ${slides.length}`;
+        const caption = slides[index].querySelector('.caption');
+        if (caption) caption.textContent = `${index + 1}/${slides.length}`;
+      }
+
+      function openHeart() {
+        const value = (pwd.value || '').trim().toLowerCase();
+        if (value === PASSWORD) {
+          hint.textContent = '';
+          cover.style.display = 'none';
+          slider.classList.add('visible');
+          setIndex(0, true);
+          setTimeout(() => pwd.value = '', 300);
+        } else {
+          hint.textContent = 'Chave incorreta, tente de novo eu acho que seria, Amor';
+          hint.classList.add('error');
+          pwd.focus();
+        }
+      }
+
+      openBtn.addEventListener('click', openHeart);
+      pwd.addEventListener('keydown', (e) => { if (e.key === 'Enter') openHeart(); });
+      prev.addEventListener('click', () => setIndex(index - 1));
+      next.addEventListener('click', () => setIndex(index + 1));
+
+      // Gestos no celular - mais restritivo para evitar trocas acidentais
+      let startX = null;
+      let startY = null;
+      slider.addEventListener('touchstart', (e) => { 
+        startX = e.touches[0].clientX; 
+        startY = e.touches[0].clientY;
+      }, {passive: true});
+      slider.addEventListener('touchend', (e) => {
+        if (startX == null || startY == null) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        // Só troca se for um movimento horizontal significativo E não vertical
+        if (Math.abs(dx) > 60 && Math.abs(dy) < 30) {
+          setIndex(index + (dx < 0 ? 1 : -1));
+        }
+        startX = null;
+        startY = null;
+      });
+
+      // Accessibility: arrow keys
+      window.addEventListener('keydown', (e) => {
+        if (!slider.classList.contains('visible')) return;
+        if (e.key === 'ArrowLeft') setIndex(index - 1);
+        if (e.key === 'ArrowRight') setIndex(index + 1);
+      });
+
+      // Foto fixa (URL fornecida) para a página 3
+      const PHOTO_URL = 'https://i.postimg.cc/MHr21hhR/oliviawilson-1.png';
+      photoImg.src = PHOTO_URL;
+    })();
+  </script>
+</body>
+</html>
+
+
+
